@@ -65,6 +65,9 @@ run "echo '//= require popper' >> app/assets/javascripts/application.js"
 run "echo '//= require bootstrap' >> app/assets/javascripts/application.js"
 run "echo '//= require_tree .' >> app/assets/javascripts/application.js"
 
+# simple form
+rails_command "generate simple_form:install --bootstrap"
+
 # capistrano
 run "bundle exec cap install"
 File.open('Capfile', 'w') do |file|
@@ -177,8 +180,7 @@ generate(:controller, "welcome", "index", "--skip-routes", "--no-helper")
 route "root to: 'welcome#index'"
 
 # active_admin
-rails_command "generate active_admin:install"
-# rails_command "generate active_admin:resource User"
+run "bundle exec rails generate active_admin:install"
 
 # rollbar
 rails_command "generate rollbar POST_SERVER_ITEM_ACCESS_TOKEN"
@@ -191,16 +193,16 @@ inject_into_file 'config/initializers/rollbar.rb', after: "config.access_token =
 RUBY
 end
 
-# simple form
-rails_command "generate simple_form:install --bootstrap"
 
 
-rails_command "db:migrate"
+# rails_command "db:migrate"
 
 # gitignore
 run "echo '.idea' >> .gitignore"
 run "echo '*.iml' >> .gitignore"
 run "echo '/config/database.yml' >> .gitignore"
+run "echo '/config/secrets.yml' >> .gitignore"
+run "echo '/config/storage.yml' >> .gitignore"
 
 git :init
 git add: "."
@@ -208,3 +210,6 @@ git commit: "-a -m 'Initial commit'"
 
 
 
+run "ECHO ***"
+run "ECHO DON'T FORGET TO RUN rake db:migrate and db:seed"
+run "ECHO ***"
