@@ -1,6 +1,74 @@
-# Init variables with file content
+# https://guides.rubyonrails.org/rails_application_templates.html
+# https://edgeguides.rubyonrails.org/generators.html
+# https://multithreaded.stitchfix.com/blog/2014/01/06/rails-app-templates/
 
-capfile <<-TEXT
+gem 'pg'
+gem 'puma', '~> 3.11'
+gem 'sassc-rails'
+gem 'slim-rails'
+gem 'simple_form'
+gem 'uglifier', '>= 1.3.0'
+gem 'bootstrap', '~> 4.1.3'
+gem 'country_select', '~> 3.1'
+gem 'jquery-rails'
+gem 'activeadmin'
+gem 'devise'
+gem 'rollbar'
+gem 'oj', '~> 2.16.1'
+gem 'whenever', require: false
+
+gem_group :development do
+  gem 'capistrano', '~> 3.11.0'
+  gem 'capistrano-rvm'
+  gem 'capistrano-rails'
+  gem 'capistrano-bundler'
+  gem 'letter_opener'
+  gem 'capistrano3-puma'
+end
+
+gem_group :development, :test do
+  gem 'rspec-rails', '~> 3.8'
+end
+
+run "bundle"
+
+gsub_file "Gemfile", /^gem\s+["']sqlite3["'].*$/,''
+gsub_file "Gemfile", /^gem\s+["']turbolinks["'].*$/,''
+gsub_file "Gemfile", /^gem\s+["']coffee-rails["'].*$/,''
+gsub_file "Gemfile", /^gem\s+["']sass-rails["'].*$/,''
+gsub_file "Gemfile", /^gem\s+["']spring["'].*$/,''
+gsub_file "Gemfile", "# Use SCSS for stylesheets",''
+gsub_file "Gemfile", "# Use sqlite3 as the database for Active Record",''
+gsub_file "Gemfile", "# Use CoffeeScript for .coffee assets and views",''
+gsub_file "Gemfile", "# Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks",''
+
+run "bundle"
+
+# rspec
+rails_command "generate rspec:install"
+
+# devise
+rails_command "generate devise:install"
+environment 'config.action_mailer.default_url_options = {host: "http://yourwebsite.example.com"}', env: 'production'
+environment 'config.action_mailer.default_url_options = {host: "localhost", port: 3000}', env: 'development'
+
+# whenever
+run "wheneverize ."
+
+# bootstrap
+run "mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss"
+run "echo '@import \"bootstrap\";' > app/assets/stylesheets/application.scss"
+run "echo '//= require jquery' > app/assets/javascripts/application.js"
+run "echo '//= require rails-ujs' >> app/assets/javascripts/application.js"
+run "echo '//= require activestorage' >> app/assets/javascripts/application.js"
+run "echo '//= require popper' >> app/assets/javascripts/application.js"
+run "echo '//= require bootstrap' >> app/assets/javascripts/application.js"
+run "echo '//= require_tree .' >> app/assets/javascripts/application.js"
+
+# capistrano
+run "bundle exec cap install"
+File.open('Capfile', 'w') do |file|
+  file.write <<-TEXT
 # Load DSL and set up stages
 require "capistrano/setup"
 
@@ -39,9 +107,12 @@ install_plugin Capistrano::Puma
 # Load custom tasks from `lib/capistrano/tasks` if you have any defined
 Dir.glob("lib/capistrano/tasks/*.rake").each { |r| import r }
 
-TEXT
+    TEXT
+end
 
-database_yml <<-TEXT
+# database
+File.open('config/database.yml', 'w') do |file|
+  file.write <<-TEXT
 default: &default
   adapter: postgresql
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
@@ -58,9 +129,12 @@ test:
 production:
   <<: *default
   database: db_production
-TEXT
+    TEXT
+end
 
-application_slim <<-TEXT
+# layout
+File.open('app/views/layouts/application.slim', 'w') do |file|
+  file.write <<-TEXT
 doctype html
 html
   head
@@ -69,17 +143,17 @@ html
 
     / Twitter
     meta name="twitter:card" content="summary"
-    meta name="twitter:title" content="#{content_for?(:title) ? yield(:title) : 'My Project'}"
-    meta name="twitter:description" content="#{content_for?(:description) ? yield(:description) : 'Shared description'}"
+    meta name="twitter:title" content="\#{content_for?(:title) ? yield(:title) : 'My Project'}"
+    meta name="twitter:description" content="\#{content_for?(:description) ? yield(:description) : 'Shared description'}"
 
     / Facebook
     meta property="og:site_name" content="My Project"
-    meta property="og:title" content="#{content_for?(:title) ? yield(:title) : 'My Project'}"
-    meta property="og:description" content="#{content_for?(:description) ? yield(:description) : 'Shared description'}"
+    meta property="og:title" content="\#{content_for?(:title) ? yield(:title) : 'My Project'}"
+    meta property="og:description" content="\#{content_for?(:description) ? yield(:description) : 'Shared description'}"
 
     / Other
     title = content_for?(:title) ? yield(:title) : 'My Project'
-    meta name="description" content="#{content_for?(:description) ? yield(:description) : 'Shared description'}"
+    meta name="description" content="\#{content_for?(:description) ? yield(:description) : 'Shared description'}"
 
     = csrf_meta_tags
     = csp_meta_tag
@@ -90,103 +164,34 @@ html
 
   body
     = yield
-TEXT
-
-
-gem 'pg'
-gem 'puma', '~> 3.11'
-gem 'sassc-rails'
-gem 'slim-rails'
-gem 'simple_form'
-gem 'uglifier', '>= 1.3.0'
-gem 'bootstrap', '~> 4.1.3'
-gem 'country_select', '~> 3.1'
-gem 'jquery-rails'
-gem 'activeadmin'
-gem 'devise'
-gem 'rollbar'
-gem 'whenever', require: false
-
-gem_group :development do
-  gem 'capistrano', '~> 3.11.0'
-  gem 'capistrano-rvm'
-  gem 'capistrano-rails'
-  gem 'capistrano-bundler'
-  gem 'letter_opener'
-  gem 'capistrano3-puma'
+  TEXT
 end
+run "rm app/views/layouts/application.html.erb"
 
-gem_group :development, :test do
-  gem 'rspec-rails', '~> 3.8'
-end
+# root controller
+generate(:controller, "welcome", "index", "--skip-routes", "--no-helper")
+route "root to: 'welcome#index'"
 
-run "bundle"
+# active_admin
+rails_command "generate active_admin:install"
+# rails_command "generate active_admin:resource User"
 
-after_bundle do
+# rollbar
+rails_command "generate rollbar POST_SERVER_ITEM_ACCESS_TOKEN"
 
-  # rspec
-  rails_command "generate rspec:install"
+# simple form
+rails_command "generate simple_form:install --bootstrap"
 
-  # devise
-  rails_command "generate devise:install"
-  environment 'config.action_mailer.default_url_options = {host: "http://yourwebsite.example.com"}', env: 'production'
-  environment 'config.action_mailer.default_url_options = {host: "localhost", port: 3000}', env: 'development'
 
-  # whenever
-  run "wheneverize ."
+rails_command "db:migrate"
 
-  # bootstrap
-  run "mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss"
-  run "echo '@import \"bootstrap\";' > app/assets/stylesheets/application.scss"
-  run "echo '//= require jquery' > app/assets/javascripts/application.js"
-  run "echo '//= require rails-ujs' >> app/assets/javascripts/application.js"
-  run "echo '//= require activestorage' >> app/assets/javascripts/application.js"
-  run "echo '//= require popper' >> app/assets/javascripts/application.js"
-  run "echo '//= require bootstrap' >> app/assets/javascripts/application.js"
-  run "echo '//= require_tree .' >> app/assets/javascripts/application.js"
+# gitignore
+run "echo '.idea' >> .gitignore"
+run "echo '*.iml' >> .gitignore"
 
-  # capistrano
-  run "bundle exec cap install"
-  File.open('Capfile', 'w') { |file| file.write capfile }
-  # run "echo 'require \"capistrano/setup\"' > Capfile"
-  # run "echo 'require \"capistrano/deploy\"' >> Capfile"
-  # run "echo 'require \"capistrano/scm/git\"' >> Capfile"
-  # run "echo 'install_plugin Capistrano::SCM::Git' >> Capfile"
-  # run "echo 'require \"capistrano/rvm\"' >> Capfile"
-  # run "echo 'require \"capistrano/bundler\"' >> Capfile"
-  # run "echo 'require \"capistrano/rails/assets\"' >> Capfile"
-  # run "echo 'require \"capistrano/rails/migrations\"' >> Capfile"
-  # run "echo 'require \"capistrano/puma\"' >> Capfile"
-  # run "echo 'install_plugin Capistrano::Puma' >> Capfile"
-  # run "echo 'Dir.glob(\"lib/capistrano/tasks/*.rake\").each { |r| import r }' >> Capfile"
-
-  # database
-  File.open('config/database.yml', 'w') { |file| file.write database_yml }
-  run "rm db/*.sqlite3"
-
-  # layout
-  File.open('app/views/layouts/application.slim', 'w') { |file| file.write application_slim }
-  run "rm app/views/layouts/application.hmtl.erb"
-
-  # root controller
-  generate(:controller, "welcome", "index", "--skip-routes", "--no-helper")
-  route "root to: 'welcome#index'"
-
-  # active_admin
-  rails_command "generate active_admin:install"
-  # rails_command "generate active_admin:resource User"
-
-  rails_command "db:migrate"
-
-  # gitignore
-  run "echo '.idea' >> .gitignore"
-  run "echo '*.iml' >> .gitignore"
-
-  git :init
-  git add: "."
-  git commit: "-a -m 'Initial commit'"
-end
-
+git :init
+git add: "."
+git commit: "-a -m 'Initial commit'"
 
 
 
