@@ -163,6 +163,10 @@ html
     link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"
 
   body
+    - if flash[:notice]
+      .alert.alert-success = notice
+    - if flash[:alert]
+      .alert.alert-warning = alert
     = yield
   TEXT
 end
@@ -178,6 +182,14 @@ rails_command "generate active_admin:install"
 
 # rollbar
 rails_command "generate rollbar POST_SERVER_ITEM_ACCESS_TOKEN"
+inject_into_file 'config/initializers/rollbar.rb', after: "config.access_token = 'POST_SERVER_ITEM_ACCESS_TOKEN'\n" do <<-RUBY
+  config.exception_level_filters.merge!(
+    'ActionController::RoutingError' => 'ignore',
+    'AbstractController::ActionNotFound' => 'ignore',
+    'ActiveRecord::RecordNotFound' => 'ignore'
+  )
+RUBY
+end
 
 # simple form
 rails_command "generate simple_form:install --bootstrap"
