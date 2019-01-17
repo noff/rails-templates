@@ -200,6 +200,7 @@ rails_command "db:migrate"
 # gitignore
 run "echo '.idea' >> .gitignore"
 run "echo '*.iml' >> .gitignore"
+run "echo '/config/database.yml' >> .gitignore"
 
 git :init
 git add: "."
